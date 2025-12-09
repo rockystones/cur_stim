@@ -18,13 +18,7 @@ use libm::exp;
 //use std::io::{self, Write};
 
 use u5_lib::{
-    clock::{self, delay_ms, delay_s, delay_us, delay_tick, hclk_request},
-    exti,
-    gpio::{self, GpioPort, TIM3_CH1_PB4, TIM3_CH4_PB1},
-    // i2c::{self, I2c},
-    low_power::{no_deep_sleep_request, Executor},
-    tim::{Config, TIM1, TIM3},
-    *,
+    clock::{self, delay_ms, delay_s, delay_tick, delay_us, hclk_request}, exti, gpio::{self, GpioPort, TIM3_CH1_PB4, TIM3_CH4_PB1}, hal::Pin, low_power::{Executor, no_deep_sleep_request}, tim::{Config, TIM1, TIM3}, *
 };
 
 //use tim::{Config, TIM1};
@@ -242,7 +236,8 @@ async fn async_main(spawner: Spawner) {
 
 
     ///////////DAC 0///////////////////
-    let DAC_data_pos0: f32 = 0.4; //
+    let DAC_data_pos0: f32 = 0.4;  // Channel 1 positive current amplitude. No more than 1.0mA.
+    //let DAC_data_neg0: f32 = -1.0; //  Channel 1 negative current amplitude. No more than 1.0mA.
     let DAC_data_neg0: f32 = -0.8;
     let DAC_max_pos0:f32 = 1.06; //0.83
     let DAC_max_neg0:f32 = -1.22; //-0.91
@@ -487,6 +482,7 @@ async fn async_main(spawner: Spawner) {
 
     ///////////DAC 0///////////////////
     let DAC2_data_pos0: f32 = 0.4; //
+    //let DAC2_data_neg0: f32 = -0.8;
     let DAC2_data_neg0: f32 = -0.8;
     let DAC2_max_pos0:f32 = 0.8; //0.83
     let DAC2_max_neg0:f32 = -1.08; //-0.91
@@ -724,14 +720,15 @@ async fn async_main(spawner: Spawner) {
     delay_s(3);
 
     yellow.toggle();
-    red.toggle();
+    //red.toggle();
     green.toggle();
-    blue.toggle();
+    //blue.toggle();
     
     let mut adc_sum_min: f64 = 5.0;
     let mut adc_sum_max: f64 = 0.0;
     let Ineg_f64:f64 = DAC_data_neg0 as f64;
     let Ineg2_f64:f64 = DAC2_data_neg0 as f64;
+    let Ipos2_f64:f64 = DAC2_data_pos0 as f64;
     let mut current_compensation:f64 = 0.0;
 
     let mut array_impedance:[f64; 30] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
@@ -762,10 +759,11 @@ async fn async_main(spawner: Spawner) {
 
 
     let mut i = 0;
+    let mut j = 0;
     let mut abnormal_counter = 0; 
-    let mut counter1 = 31700; //31700
-    let mut counter2 = 54; //54
-    let mut minute_count = 54; //54
+    let mut counter1 = 35550; //31700
+    let mut counter2 = 28; //54
+    let mut minute_count = 28; //54
     let mut first_count = 0;
     let mut margin = 20.0;
 
@@ -782,23 +780,11 @@ async fn async_main(spawner: Spawner) {
             t8 = t5 - t7;
         }
 
-        // s3.set_high();
-        // s7.set_high();
+        s3.set_high();
+        s7.set_high();
 
         hclk_request(clock::ClockFreqs::KernelFreq160Mhz, ||{
-            // s1.set_high();
-            // s5.set_high();
-            // delay_us(100);
-            // s1.set_low();
-            // s5.set_low();
-            // delay_us(100);
-            // s2.set_high();
-            // s6.set_high();
-            // delay_us(200);
-            // s2.set_low();
-            // s6.set_low();
-            // delay_us(300);
-
+//////////////square wave ////////////////////////////////
             s3.set_high();
             s2.set_high();
             delay_us(100);
@@ -808,8 +794,10 @@ async fn async_main(spawner: Spawner) {
             delay_us(200);
             s1.set_low();
             delay_us(50);
+////////////////////////////////////////////////////////////
 
 
+/////////////////capacitor-coupled wave /////////////////
         //     s0.set_high();
         //     s1.set_high();
         //     s2.set_high();
@@ -856,110 +844,143 @@ async fn async_main(spawner: Spawner) {
             delay_us(50);
         });
         // s0.set_low();
-        // s4.set_low();
-        // delay_us(100);
+        s4.set_low();
+        delay_us(100);
+////////////////////////////////////////////////
 
-        // if counter1 >= 32700 { //32700
-        //     if counter2 >= minute_count {
+//////////////DOC mode/////////////////////////////
+        //     s2.set_high();
+        //     delay_us(200);
+        //     s2.set_low();
+        //     delay_us(200);
+        //     s5.set_high();
+        //     delay_us(200);
+        //     s5.set_low();
+        //     delay_us(66);
+        //     delay_ms(1);
+        // });
 
-        //         TIM3_CH1_PB4.setup();
-        //         TIM3.enable_output(1);
-        //         ADC_sel3.set_low();
+////////////////////////////////////////////////////
+
+        //if counter1 >= 36000 { //32700
+        if(first_count == 0 ){
+            if(j < 4){
+            //if counter2 >= minute_count {
+
+                TIM3_CH1_PB4.setup();
+                TIM3.enable_output(1);
                 
-        //         if first_count == 0{
-        //             i = 0;
-        //             //defmt::info!("First count is 0. i is {}", i);
-        //         }else {
-        //             i = 27;
-        //             //defmt::info!("First count is NOT 0. i is {}", i);
-        //         }
+                if(j%2 == 0){
+                    ADC_sel1.set_low();
+                } else {
+                    ADC_sel1.set_high();
+                }
+                if (j > 1) {
+                    ADC_sel2.set_high();
+                } else {
+                    ADC_sel2.set_low();
+                }
+                
+                
+                // if first_count == 0{
+                //     i = 0;
+                //     //defmt::info!("First count is 0. i is {}", i);
+                // }else {
+                //     i = 27;
+                //     //defmt::info!("First count is NOT 0. i is {}", i);
+                // }
+                i = 29;
+                j = j + 1;
 
-        //         while i < array_impedance.len(){
-        //             adc_sum_max = 0.0;
-        //             adc_sum_min = 3.0;
-        //             delay_ms(5);     
+                // while i < array_impedance.len(){
+                    adc_sum_max = 0.0;
+                    adc_sum_min = 3.0;
+                    delay_ms(5);     
 
-        //             TIM3.set_pwm(1, frequency_divider[i], frequency_divider[i]/2);
-        //             delay_ms(500);
-        //             for q in 0..1000{ //1000
-        //                 let res1 = tmp_adc.start_conversion_sw(1); 
-        //                 let vpos1 = res1 as f64 * vref;
-        //                 if vpos1 > adc_sum_max {
-        //                     adc_sum_max = vpos1;
-        //                 }
-        //                 if vpos1 < adc_sum_min {
-        //                     adc_sum_min = vpos1;
-        //                 }
-        //             }
+                    TIM3.set_pwm(1, frequency_divider[i], frequency_divider[i]/2);
+                    delay_ms(100);
+                    for q in 0..1000{ //1000
+                        let res1 = tmp_adc.start_conversion_sw(1); 
+                        let vpos1 = res1 as f64 * vref;
+                        if vpos1 > adc_sum_max {
+                            adc_sum_max = vpos1;
+                        }
+                        if vpos1 < adc_sum_min {
+                            adc_sum_min = vpos1;
+                        }
+                    }
  
-        //             let R_measure = (adc_sum_max - adc_sum_min) * 1000.0 / (-Ineg_f64);
-        //             if i > 0 && R_measure > (array_impedance[i-1] + margin){
-        //                 abnormal_counter = abnormal_counter + 1; 
-        //                 //defmt::info!("wrong measure, i is {}, R is {}", i, R_measure);
-        //                 if abnormal_counter > 2{
-        //                     i = i - 1; 
-        //                     abnormal_counter = 0;
-        //                 }
-        //             } else if i == array_impedance.len() - 1 && R_measure < array_impedance[i-1] - 50.0{
-        //                 i = i;
-        //             } else {
-        //                 // defmt::info!("Impedance is {}. i is {}", R_measure, i);
-        //                 array_impedance[i] = (adc_sum_max - adc_sum_min) * 1000.0 / (-Ineg_f64); 
-        //             //defmt::info!("ADC difference is {} - {} = {}", adc_sum_max, adc_sum_min, adc_sum_max - adc_sum_min);
-        //                 i = i + 1;
-        //             }
+                    let R_measure = (adc_sum_max - adc_sum_min) * 1000.0 / (-Ineg_f64);
+                    defmt::info!("Electrode impedance{} is {}", j, R_measure);
+                    //let R_measure = (adc_sum_max - adc_sum_min) * 1000.0 / (Ineg_f64);
+                    // if i > 0 && R_measure > (array_impedance[i-1] + margin){
+                    //     abnormal_counter = abnormal_counter + 1; 
+                    //     //defmt::info!("wrong measure, i is {}, R is {}", i, R_measure);
+                    //     if abnormal_counter > 2{
+                    //         i = i - 1; 
+                    //         abnormal_counter = 0;
+                    //     }
+                    // } else if i == array_impedance.len() - 1 && R_measure < array_impedance[i-1] - 50.0{
+                    //     i = i;
+                    // } else {
+                    //     // defmt::info!("Impedance is {}. i is {}", R_measure, i);
+                    //    // array_impedance[i] = (adc_sum_max - adc_sum_min) * 1000.0 / (-Ineg_f64);
+                    //    array_impedance[i] = (adc_sum_max - adc_sum_min) * 1000.0 / (Ineg_f64); 
+                    // //defmt::info!("ADC difference is {} - {} = {}", adc_sum_max, adc_sum_min, adc_sum_max - adc_sum_min);
+                    //     i = i + 1;
+                    // }
 
-        //             delay_ms(10);
-        //         }
-        //         TIM3.disable_output(1);
-        //         delay_ms(10);
+                    // delay_ms(10);
+                // }
+                TIM3.disable_output(1);
+                delay_ms(10);
 
-        //         let imp_comp1 = 40.0/DAC_data_neg0 as f64;
-        //         let imp_comp2 = 50.0/DAC_data_neg0 as f64;
-        //         // if (first_count == 0){
-        //         //     for l in 0..array_impedance.len(){
-        //         //         if l < 23{
-        //         //             array_impedance[l] = array_impedance[l] + imp_comp1;
-        //         //         } 
-        //         //         else {
-        //         //             array_impedance[l] = array_impedance[l] + imp_comp2;
-        //         //         }
+                // let imp_comp1 = 40.0/DAC_data_neg0 as f64;
+                // let imp_comp2 = 50.0/DAC_data_neg0 as f64;
+                // if (first_count == 0){
+                //     for l in 0..array_impedance.len(){
+                //         if l < 23{
+                //             array_impedance[l] = array_impedance[l] + imp_comp1;
+                //         } 
+                //         else {
+                //             array_impedance[l] = array_impedance[l] + imp_comp2;
+                //         }
                         
-        //         //     }
-        //         // }
+                //     }
+                // }
                 
-        //         if(first_count == 0){
-        //             defmt::info!("Impedance value is {}", array_impedance);
-        //             delay_s(1);
-        //             defmt::info!("Impedance value is {}", array_impedance);
-        //             delay_s(1);
-        //             Rs = (array_impedance[29] + array_impedance[28]+ array_impedance[27])/3.0 ;
-        //             Rp = (array_impedance[0] + array_impedance[1])/2.0 - Rs;  
-        //             (fc, Cp) = utils::capacitor_calculate(&frequency_divider, &array_impedance, Rp, Rs, 0.0);
-        //             defmt::info!("fc is {:?} Hz", fc);
-        //             defmt::info!("Rs is {}, Rp is {}, Cp is {} uF", Rs, Rp, Cp);
-        //             delay_ms(1);
-        //             defmt::info!("Rs is {}, Rp is {}, Cp is {} uF", Rs, Rp, Cp);
-        //             delay_ms(10);
-        //         } else {
-        //             Rs = (array_impedance[29] + array_impedance[28]+ array_impedance[27])/3.0;
-        //             defmt::info!("New Rs is {}", Rs);
-        //             delay_ms(10);
-        //         }
+                // if(first_count == 0){
+                //     defmt::info!("Impedance value is {}", array_impedance);
+                //     delay_s(1);
+                //     defmt::info!("Impedance value is {}", array_impedance);
+                //     delay_s(1);
+                //     Rs = (array_impedance[29] + array_impedance[28]+ array_impedance[27])/3.0 ;
+                //     Rp = (array_impedance[0] + array_impedance[1])/2.0 - Rs;  
+                //     (fc, Cp) = utils::capacitor_calculate(&frequency_divider, &array_impedance, Rp, Rs, 0.0);
+                //     defmt::info!("fc is {:?} Hz", fc);
+                //     defmt::info!("Rs is {}, Rp is {}, Cp is {} uF", Rs, Rp, Cp);
+                //     delay_ms(1);
+                //     defmt::info!("Rs is {}, Rp is {}, Cp is {} uF", Rs, Rp, Cp);
+                //     delay_ms(10);
+                // } else {
+                //     Rs = (array_impedance[29] + array_impedance[28]+ array_impedance[27])/3.0;
+                //     defmt::info!("New Rs is {}", Rs);
+                //     delay_ms(10);
+                // }
 
-        //         let t2_f64 = t2 as f64; // unit is us
-        //         let t3_f64 = t3 as f64; //unit is us
-        //         let Ineg_f64:f64 = -DAC_data_neg0 as f64; // unit is mA
+                // let t2_f64 = t2 as f64; // unit is us
+                // let t3_f64 = t3 as f64; //unit is us
+                // let Ineg_f64:f64 = -DAC_data_neg0 as f64; // unit is mA
 
-        //         delay_ms(10);
-        //         tauRC = (Rs * Rp * Cp*1e-6)/(Rs + Rp);
-        //         let V0: f64 = DAC_data_pos0 as f64* t3_f64 * 0.01; // mA * us / 0.1uF = 0.01
-        //         let I0 = V0 / (Rs + Rp); // the acutal current is larger? 
-        //         let mut t1_f64 = (1.0 - exp(t2_f64*1e-6/(-1.0*tauRC)))*I0*tauRC/(Ineg_f64*1e-3)*500000.0 ;
-        //         t1 = t1_f64 as u32;
-        //         defmt::info!("t1 is {}", t1);
-
-        //         s2.setup();
+                // delay_ms(10);
+                // tauRC = (Rs * Rp * Cp*1e-6)/(Rs + Rp);
+                // let V0: f64 = DAC_data_pos0 as f64* t3_f64 * 0.01; // mA * us / 0.1uF = 0.01
+                // let I0 = V0 / (Rs + Rp); // the acutal current is larger? 
+                // let mut t1_f64 = (1.0 - exp(t2_f64*1e-6/(-1.0*tauRC)))*I0*tauRC/(Ineg_f64*1e-3)*500000.0 ;
+                // t1 = t1_f64 as u32;
+                // defmt::info!("t1 is {}", t1);
+            }
+            //     s2.setup();
 
 /////////////////////////////// group 2 2DAC /////////////////////////// 
 
@@ -991,11 +1012,25 @@ async fn async_main(spawner: Spawner) {
                 //     Ineg2_hex = Ineg2_hex >> 1;
                 // }
 
+            if(j < 8) { 
+                
+                if(j%2 == 0){
+                    ADC_sel1.set_low();
+                } else {
+                    ADC_sel1.set_high();
+                }
+                if (j > 5) {
+                    ADC_sel2.set_high();
+                } else {
+                    ADC_sel2.set_low();
+                }
+                i = 29;
+                j = j + 1;
 
-                // ADC_sel3.set_high();
-                // s5.set_high();
-                // TIM3_CH4_PB1.setup();
-                // TIM3.enable_output(4);
+                ADC_sel3.set_high();
+                s5.set_high();
+                TIM3_CH4_PB1.setup();
+                TIM3.enable_output(4);
                 
                 // if first_count == 0{
                 //         i = 0;
@@ -1005,63 +1040,66 @@ async fn async_main(spawner: Spawner) {
                 //        // defmt::info!("First count is NOT 0. i is {}", i);
                 //     }
 
-                // while i < array_impedance2.len(){
-                //     adc_sum_max = 0.0;
-                //     adc_sum_min = 3.0;
-                //     delay_ms(5);     
-
-                //     TIM3.set_pwm(4, frequency_divider[i], frequency_divider[i]/2);
-                //     delay_ms(10);
+                //while i < array_impedance2.len(){
                     
+                    adc_sum_max = 0.0;
+                    adc_sum_min = 3.0;
+                    delay_ms(5);     
 
-                //     delay_ms(500);
-                //     for q in 0..1000{ //1000
-                //         let res1 = tmp_adc.start_conversion_sw(1); 
-                //         let vpos1 = res1 as f64 * vref;
-                //         if vpos1 > adc_sum_max {
-                //             adc_sum_max = vpos1;
-                //         }
-                //         if vpos1 < adc_sum_min {
-                //             adc_sum_min = vpos1;
-                //         }
-                //     }
+                    TIM3.set_pwm(4, frequency_divider[i], frequency_divider[i]/2);
+                    delay_ms(10);
+
+                    delay_ms(100);
+                    for q in 0..1000{ //1000
+                        let res1 = tmp_adc.start_conversion_sw(1); 
+                        let vpos1 = res1 as f64 * vref;
+                        if vpos1 > adc_sum_max {
+                            adc_sum_max = vpos1;
+                        }
+                        if vpos1 < adc_sum_min {     
+                            adc_sum_min = vpos1;
+                        } 
+                    }
  
-                //     let R_measure = (adc_sum_max - adc_sum_min) * 1000.0 / (-Ineg2_f64);
-                //     if i > 0 && R_measure > (array_impedance2[i-1] + margin){
-                //         abnormal_counter = abnormal_counter + 1; 
-                //         defmt::info!("wrong measure2, i is {}, R is {}", i, R_measure);
-                //         if abnormal_counter > 2{
-                //             i = i - 1; 
-                //             abnormal_counter = 0;
-                //         }
-                //     } else if i == array_impedance2.len() - 1 && R_measure < array_impedance2[i-1] - 50.0{
-                //         i = i;
-                //     } else {
-                //         // defmt::info!("Impedance2 is {}. i2 is {}", R_measure, i);
-                //         array_impedance2[i] = (adc_sum_max - adc_sum_min) * 1000.0 / (-Ineg2_f64); 
-                //     //defmt::info!("ADC difference is {} - {} = {}", adc_sum_max, adc_sum_min, adc_sum_max - adc_sum_min);
-                //         i = i + 1;
-                //     }
+                   // let R_measure = (adc_sum_max - adc_sum_min) * 1000.0 / (-Ineg2_f64);
+                    let R_measure = (adc_sum_max - adc_sum_min) * 1000.0 / (Ipos2_f64);
+                    defmt::info!("Electrode impedance{} is {}", j,  R_measure);
+                    // if i > 0 && R_measure > (array_impedance2[i-1] + margin){
+                    //     abnormal_counter = abnormal_counter + 1; 
+                    //     //defmt::info!("wrong measure2, i is {}, R is {}", i, R_measure);
+                    //     if abnormal_counter > 2{
+                    //         i = i - 1; 
+                    //         abnormal_counter = 0;
+                    //     }
+                    // } else if i == array_impedance2.len() - 1 && R_measure < array_impedance2[i-1] - 50.0{
+                    //     i = i;
+                    // } else {
+                    //     // defmt::info!("Impedance2 is {}. i2 is {}", R_measure, i);
+                    //     //array_impedance2[i] = (adc_sum_max - adc_sum_min) * 1000.0 / (-Ineg2_f64); 
+                    //     array_impedance2[i] = (adc_sum_max - adc_sum_min) * 1000.0 / (Ineg2_f64);
+                    // //defmt::info!("ADC difference is {} - {} = {}", adc_sum_max, adc_sum_min, adc_sum_max - adc_sum_min);
+                    //     i = i + 1;
+                    // }
 
-                //     delay_ms(10);
+                    // delay_ms(10);
                 // }
-                // TIM3.disable_output(4);
-                // s5.set_low();
-                // delay_ms(10);
-
+                TIM3.disable_output(4);
+                s5.set_low();
+                delay_ms(10);
+            }
                 // let imp_comp3 = 40.0/DAC2_data_neg0 as f64;
                 // let imp_comp4 = 50.0/DAC2_data_neg0 as f64;
-                // // if (first_count == 0){
-                // //     for l in 0..array_impedance2.len(){
-                // //         if l < 23{
-                // //             array_impedance2[l] = array_impedance2[l] + imp_comp3;
-                // //         } 
-                // //         else {
-                // //             array_impedance2[l] = array_impedance2[l] + imp_comp4;
-                // //         }
+                // if (first_count == 0){
+                //     for l in 0..array_impedance2.len(){
+                //         if l < 23{
+                //             array_impedance2[l] = array_impedance2[l] + imp_comp3;
+                //         } 
+                //         else {
+                //             array_impedance2[l] = array_impedance2[l] + imp_comp4;
+                //         }
                         
-                // //     }
-                // // }
+                //     }
+                // }
                 
 
                 // if(first_count == 0){
@@ -1120,19 +1158,22 @@ async fn async_main(spawner: Spawner) {
                 //     Ipos2_hex = Ipos2_hex >> 1;
                 // }
                 // polarity_sel2.set_low();
-        //         counter2 = 0;
-        //         first_count = 1; 
-        //     } else {
-        //         s2.setup();
-        //         s7.setup();
-        //         counter2 = counter2 + 1;
-        //         // defmt::info!("counter2 is {}", counter2);
-        //     }
-        //     counter1 = 0;
+            //    counter2 = 0;
+            }
+
+
+                first_count = 1; 
+            //} else {
+                s2.setup();
+                s7.setup();
+            //    counter2 = counter2 + 1;
+                //defmt::info!("counter2 is {}", counter2);
+            // }
+            // counter1 = 0;
         // } 
         // else {
         //     counter1 = counter1 + 1;
-        // }
+        }
     }
 }
 
