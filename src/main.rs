@@ -1173,7 +1173,7 @@ async fn async_main(spawner: Spawner) {
         // } 
         // else {
         //     counter1 = counter1 + 1;
-        }
+        // }
     }
 }
 
