@@ -238,7 +238,7 @@ async fn async_main(spawner: Spawner) {
     ///////////DAC 0///////////////////
     let DAC_data_pos0: f32 = 0.4;  // Channel 1 positive current amplitude. No more than 1.0mA.
     //let DAC_data_neg0: f32 = -1.0; //  Channel 1 negative current amplitude. No more than 1.0mA.
-    let DAC_data_neg0: f32 = -0.4;
+    let DAC_data_neg0: f32 = -0.8;
     let DAC_max_pos0:f32 = 1.06; //0.83
     let DAC_max_neg0:f32 = -1.22; //-0.91
     let mut Ipos_hex = utils::cur_coding(DAC_data_pos0, DAC_max_pos0, DAC_max_neg0);
@@ -297,7 +297,7 @@ async fn async_main(spawner: Spawner) {
     /////////////////DAC 1 ////////////////////
 
     let DAC_data_pos1 = 0.4;
-    let DAC_data_neg1 = -0.4;
+    let DAC_data_neg1 = -0.8;
     let DAC_max_pos1 = 0.92; //1.04
     let DAC_max_neg1:f32 = -0.92; //-1.04
     Ipos_hex = utils::cur_coding(DAC_data_pos1, DAC_max_pos1, DAC_max_neg1);
@@ -359,7 +359,7 @@ async fn async_main(spawner: Spawner) {
 
     ///////////// DAC 2 //////////////////////////
     let DAC_data_pos2 = 0.4;
-    let DAC_data_neg2 = -0.4;
+    let DAC_data_neg2 = -0.8;
     let DAC_max_pos2 = 0.86; //0.48
     let DAC_max_neg2:f32 = -0.86; //-0.51
     Ipos_hex = utils::cur_coding(DAC_data_pos2, DAC_max_pos2, DAC_max_neg2);
@@ -419,7 +419,7 @@ async fn async_main(spawner: Spawner) {
 
     ///////////////DAC 3 /////////////////
     let DAC_data_pos3 = 0.4;
-    let DAC_data_neg3 = -0.4;
+    let DAC_data_neg3 = -0.8;
     let DAC_max_pos3 = 0.86; //
     let DAC_max_neg3: f32 = -0.98; //-1.06
     Ipos_hex = utils::cur_coding(DAC_data_pos3, DAC_max_pos3, DAC_max_neg3);
@@ -481,9 +481,9 @@ async fn async_main(spawner: Spawner) {
     ///////////////////////////////////////////////////////////////////
 
     ///////////DAC 0///////////////////
-    let DAC2_data_pos0: f32 = -0.4; //
+    let DAC2_data_pos0: f32 = 0.4; //
     //let DAC2_data_neg0: f32 = -0.8;
-    let DAC2_data_neg0: f32 = -0.4;
+    let DAC2_data_neg0: f32 = -0.8;
     let DAC2_max_pos0:f32 = 0.8; //0.83
     let DAC2_max_neg0:f32 = -1.08; //-0.91
     let mut Ipos2_hex = utils::cur_coding(DAC2_data_pos0, DAC2_max_pos0, DAC2_max_neg0);
@@ -537,8 +537,8 @@ async fn async_main(spawner: Spawner) {
 
     /////////////////DAC 1 ////////////////////
 
-    let DAC2_data_pos1 = -0.4;
-    let DAC2_data_neg1 = -0.4;
+    let DAC2_data_pos1 = 0.4;
+    let DAC2_data_neg1 = -0.8;
     let DAC2_max_pos1 = 0.75; //0.48
     let DAC2_max_neg1:f32 = -0.8; //-0.55
     Ipos2_hex = utils::cur_coding(DAC2_data_pos1, DAC2_max_pos1, DAC2_max_neg1);
@@ -597,8 +597,8 @@ async fn async_main(spawner: Spawner) {
     }
 
     ///////////// DAC 2 //////////////////////////
-    let DAC2_data_pos2 = -0.4;
-    let DAC2_data_neg2 = -0.4;
+    let DAC2_data_pos2 = 0.4;
+    let DAC2_data_neg2 = -0.8;
     let DAC2_max_pos2 = 0.73; //0.48
     let DAC2_max_neg2:f32 = -0.8; //-0.51
     Ipos2_hex = utils::cur_coding(DAC2_data_pos2, DAC2_max_pos2, DAC2_max_neg2);
@@ -657,8 +657,8 @@ async fn async_main(spawner: Spawner) {
     }
 
     ///////////////DAC 3 /////////////////
-    let DAC2_data_pos3 = -0.4;
-    let DAC2_data_neg3 = -0.4;
+    let DAC2_data_pos3 = 0.4;
+    let DAC2_data_neg3 = -0.8;
     let DAC2_max_pos3 = 0.7; //0.46 
     let DAC2_max_neg3: f32 = -0.92; //-0.35
     Ipos2_hex = utils::cur_coding(DAC2_data_pos3, DAC2_max_pos3, DAC2_max_neg3);
@@ -719,10 +719,10 @@ async fn async_main(spawner: Spawner) {
     defmt::info!("Data transfer finished!");
     delay_s(3);
 
-    //yellow.toggle();
-    red.toggle();
-    //green.toggle();
-    blue.toggle();
+    yellow.toggle();
+    //red.toggle();
+    green.toggle();
+    //blue.toggle();
     
     let mut adc_sum_min: f64 = 5.0;
     let mut adc_sum_max: f64 = 0.0;
@@ -746,7 +746,7 @@ async fn async_main(spawner: Spawner) {
 
     ////////////////////////////////////////////////////////
     let mut t1 = 100; //negative pulse time. unit is us
-    let mut t2 = 260; //positive pulse time. unit is us 
+    let mut t2 = 200; //positive pulse time. unit is us 
     let mut t3 = 150; //charge time. unit is us
     let mut t4 = 50;
     let mut tauRC = 0.0;
@@ -767,97 +767,112 @@ async fn async_main(spawner: Spawner) {
     let mut first_count = 0;
     let mut margin = 20.0;
 
-    
-
-        if(j < 4){
-            TIM3_CH1_PB4.setup();
-            TIM3.enable_output(1);
-            
-            if(j%2 == 0){
-                ADC_sel1.set_low();
-            } else {
-                ADC_sel1.set_high();
-            }
-            if (j > 1) {
-                ADC_sel2.set_high();
-            } else {
-                ADC_sel2.set_low();
-            }
-            
-            
-            i = 29;
-            j = j + 1;
-
-            adc_sum_max = 0.0;
-            adc_sum_min = 3.0;
-            delay_ms(5);     
-
-            TIM3.set_pwm(1, frequency_divider[i], frequency_divider[i]/2);
-            delay_ms(100);
-            for q in 0..1000{ //1000
-                let res1 = tmp_adc.start_conversion_sw(1); 
-                let vpos1 = res1 as f64 * vref;
-                if vpos1 > adc_sum_max {
-                    adc_sum_max = vpos1;
-                }
-                if vpos1 < adc_sum_min {
-                    adc_sum_min = vpos1;
-                }
-            }
-
-            let R_measure = (adc_sum_max - adc_sum_min) * 1000.0 / (-Ineg_f64);
-            defmt::info!("Electrode impedance{} is {}", j, R_measure);
-                
-            TIM3.disable_output(1);
-            delay_ms(10);
+    loop{
+        if t3> t1 {
+            t4 = t3 - t1;
+        } else {
+            t4 = t1 - t3;
         }
 
-/////////////////////////////// group 2 2DAC /////////////////////////// 
+        if(t7 > t5){
+            t8 = t7 - t5;
+        } else {
+            t8 = t5 - t7;
+        }
+
+        s3.set_high();
+        s7.set_high();
+
+        hclk_request(clock::ClockFreqs::KernelFreq160Mhz, ||{
+//////////////square wave ////////////////////////////////
+            s3.set_high();
+            s2.set_high();
+            delay_us(100);
+            s2.set_low();
+            delay_us(100);
+            s1.set_high();
+            delay_us(200);
+            s1.set_low();
+            delay_us(50);
+////////////////////////////////////////////////////////////
 
 
-        if(j < 8) {    
-            if(j%2 == 0){
-                ADC_sel1.set_low();
-            } else {
-                ADC_sel1.set_high();
-            }
-            if (j > 5) {
-                ADC_sel2.set_high();
-            } else {
-                ADC_sel2.set_low();
-            }
-            i = 29;
-            j = j + 1;
+/////////////////capacitor-coupled wave /////////////////
+        //     s0.set_high();
+        //     s1.set_high();
+        //     s2.set_high();
 
-            ADC_sel3.set_high();
+        //     if t3 > t1 {
+        //         delay_us(t1);
+        //         s2.set_low();
+        //         delay_us(t4);
+        //         s1.set_low();
+        //     }else {
+        //         delay_us(t3);
+        //         s1.set_low();
+        //         delay_us(t4);
+        //         s2.set_low();
+        //     }
+
+        //     delay_us(10);
+        //     s3.set_high();
+        //     //delay_tick(1);
+        //     delay_us(t2);
+        //     s3.set_low();
+        //     delay_us(100);
+
+            s4.set_high();
             s5.set_high();
-            TIM3_CH4_PB1.setup();
-            TIM3.enable_output(4);
-            
-                
-            adc_sum_max = 0.0;
-            adc_sum_min = 3.0;
-            delay_ms(5);     
+            s6.set_high();
 
-            TIM3.set_pwm(4, frequency_divider[i], frequency_divider[i]/2);
-            delay_ms(10);
-
-            delay_ms(100);
-            for q in 0..1000{ //1000
-                let res1 = tmp_adc.start_conversion_sw(1); 
-                let vpos1 = res1 as f64 * vref;
-                if vpos1 > adc_sum_max {
-                    adc_sum_max = vpos1;
-                }
-                if vpos1 < adc_sum_min {     
-                    adc_sum_min = vpos1;
-                } 
+            if t7 > t5 {
+                delay_us(t5);
+                s6.set_low();
+                delay_us(t8);
+                s5.set_low();
+            }else {
+                delay_us(t7);
+                s5.set_low();
+                delay_us(t8);
+                s6.set_low();
             }
-            
-            let R_measure = (adc_sum_max - adc_sum_min) * 1000.0 / (-Ipos2_f64);
-            defmt::info!("Electrode impedance{} is {}", j,  R_measure);
-                
-            TIM3.disable_output(4);
+
+            delay_us(10);
+            s7.set_high();
+            delay_us(t6);
+            s7.set_low();
+            delay_us(50);
+             s4.set_low();
+            delay_us(100);
+        });
+        // s0.set_low();
+       
+////////////////////////////////////////////////
+
+//////////////DOC mode/////////////////////////////
+        //     s2.set_high();
+        //     delay_us(200);
+        //     s2.set_low();
+        //     delay_us(200);
+        //     s5.set_high();
+        //     delay_us(200);
+        //     s5.set_low();
+        //     delay_us(66);
+        //     delay_ms(1);
+        // });
+
+////////////////////////////////////////////////////
+
+        if counter1 >= 51000 { //32700
+            s2.set_high();
+            s6.set_high();
+            delay_ms(1);
+            s2.set_low();
+            s6.set_low();
+            counter1 = 0;
+        } 
+        else {
+            counter1 = counter1 + 1;
         }
     }
 }
