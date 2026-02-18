@@ -236,51 +236,51 @@ async fn async_main(spawner: Spawner) {
         s10.set_low();
         delay_us(690);
     
-        counter += 1;
-        if counter >= 10000 {
-            s8.set_high();
-            s14.set_high();
-            delay_ms(1);
-            s8.set_low();
-            s14.set_low();
-            TIM1_CH2_PA9.setup();
-            TIM1.set_pwm(2, 1600, 800);
-            TIM1.enable_output(2);
-            let res = tmp_adc.start_conversion_sw(5); 
-            let vpos = res as f64 * vref;
-            adc_sum -= adc_values[adc_indexer]; 
-            adc_values[adc_indexer] = vpos; 
-            adc_sum += vpos; 
-            defmt::info!("adc average value: {}", adc_sum/5.0);
+        // counter += 1;
+        // if counter >= 10000 {
+        //     s8.set_high();
+        //     s14.set_high();
+        //     delay_ms(1);
+        //     s8.set_low();
+        //     s14.set_low();
+        //     TIM1_CH2_PA9.setup();
+        //     TIM1.set_pwm(2, 1600, 800);
+        //     TIM1.enable_output(2);
+        //     let res = tmp_adc.start_conversion_sw(5); 
+        //     let vpos = res as f64 * vref;
+        //     adc_sum -= adc_values[adc_indexer]; 
+        //     adc_values[adc_indexer] = vpos; 
+        //     adc_sum += vpos; 
+        //     defmt::info!("adc average value: {}", adc_sum/5.0);
             
-            //let Rs = (adc_sum/5.0) * 1000.0 / Ipos_f64;
-            //let Rp = R_total - Rs;
-            //defmt::info!("Rs is {}", Rs);
-            //defmt::info!("Rp is {}", Rp);
-            // let C0 = 1e-6;
+        //     //let Rs = (adc_sum/5.0) * 1000.0 / Ipos_f64;
+        //     //let Rp = R_total - Rs;
+        //     //defmt::info!("Rs is {}", Rs);
+        //     //defmt::info!("Rp is {}", Rp);
+        //     // let C0 = 1e-6;
             
-            // let tauRC =  (Rs * Rp * Cp)/(Rs + Rp);
-            // let V0 = Ipos* t1/C0;
-            // let I0 = V0/(Rs + Rp);
-            // let base = 1 - Ineg*t1*1e-3/(I0*tauRC);
-            // let t2 = -tauRC*base.ln();
+        //     // let tauRC =  (Rs * Rp * Cp)/(Rs + Rp);
+        //     // let V0 = Ipos* t1/C0;
+        //     // let I0 = V0/(Rs + Rp);
+        //     // let base = 1 - Ineg*t1*1e-3/(I0*tauRC);
+        //     // let t2 = -tauRC*base.ln();
 
            
-            if adc_sum / 5.0 > 1.6 {
-                red.set_high();
-            }
-            else {
-                red.set_low();
-            }
-            s1.setup();
-            s2.setup();
-            adc_indexer += 1;
-            adc_indexer %= 5;
-            counter = 0;
-        }
+        //     if adc_sum / 5.0 > 1.6 {
+        //         red.set_high();
+        //     }
+        //     else {
+        //         red.set_low();
+        //     }
+        //     s1.setup();
+        //     s2.setup();
+        //     adc_indexer += 1;
+        //     adc_indexer %= 5;
+        //     counter = 0;
+        // }
         green.toggle();
         //delay_s(3);
-        // red.toggle();
+        red.toggle();
         //delay_ms(1);
         //defmt::info!("toggle leds");
     }
