@@ -22,7 +22,7 @@ use libm::log;
 //use std::io::{self, Write};
 
 use u5_lib::{
-    clock::{self, delay_ms, delay_s, delay_us}, exti, gpio::{self, GpioPort, I2C1_SCL_PB6, I2C1_SDA_PB3, TIM1_CH2_PA9, TIM1_CH3_PA10, TIM3_CH1_PA6}, hal::I2c,  low_power::{no_deep_sleep_request, Executor}, task, tim::{Config, TIM1, TIM3}, *
+    clock::{self, delay_ms, delay_s, delay_us, hclk_request}, exti, gpio::{self, GpioPort, I2C1_SCL_PB6, I2C1_SDA_PB3, TIM1_CH2_PA9, TIM1_CH3_PA10, TIM3_CH1_PA6}, hal::I2c,  low_power::{Executor, no_deep_sleep_request}, task, tim::{Config, TIM1, TIM3}, *
 };
 
 //use tim::{Config, TIM1};
@@ -93,7 +93,7 @@ async fn async_main(spawner: Spawner) {
     // be careful, if the dbg is not enabled, but using deep sleep. This framework will not able to connect to chip.
     // stm32cube programmer, stmcubeide can be used to program the chip, then this framework can be used to debug.
     // clock::init_clock(true, true,  16_000_000, true, clock::ClockFreqs::KernelFreq1Mhz);
-    clock::init_clock(true, clock::ClockFreqs::KernelFreq1Mhz);
+    clock::init_clock(true, clock::ClockFreqs::KernelFreq4Mhz);
     unsafe {
         no_deep_sleep_request();
     }
@@ -242,16 +242,17 @@ async fn async_main(spawner: Spawner) {
     let mut Cp = 1.0; //unit is uF
     let mut V0 = 0.0;
     let mut I0 = 0.0;
+
+    red.set_high();
     loop {
-        s2.set_high();
-        delay_ms(1);
-        s2.set_low();
-        delay_ms(1);
-        s1.set_high();
-        delay_ms(1);
-        s1.set_low();
-        delay_ms(6);
-        i = 0;
+        // hclk_request(clock::ClockFreqs::KernelFreq160Mhz, ||{
+        hclk_request(clock::ClockFreqs::KernelFreq16Mhz, || {
+            s1.set_high();
+            delay_us(100);
+            s1.set_low();
+            delay_us(100);
+        });
+        // i = 0;
         // s2.set_high();
         // s1.set_high();
         // delay_us(t1);
@@ -436,9 +437,9 @@ async fn async_main(spawner: Spawner) {
         //     counter += 1;
         // }
         // TIM1.disable_output(3);
-        green.toggle();
+        // green.toggle();
         // red.toggle();
-        delay_ms(4);
+        // delay_ms(4);
     }
 }
 
