@@ -93,7 +93,7 @@ async fn async_main(spawner: Spawner) {
     // be careful, if the dbg is not enabled, but using deep sleep. This framework will not able to connect to chip.
     // stm32cube programmer, stmcubeide can be used to program the chip, then this framework can be used to debug.
     // clock::init_clock(true, true,  16_000_000, true, clock::ClockFreqs::KernelFreq1Mhz);
-    clock::init_clock(true, clock::ClockFreqs::KernelFreq4Mhz);
+    clock::init_clock(true, clock::ClockFreqs::KernelFreq16Mhz);
     unsafe {
         no_deep_sleep_request();
     }
@@ -132,9 +132,9 @@ async fn async_main(spawner: Spawner) {
     s8.set_low(); // 1.5v DC connection
     chopper_input2.set_low();
 
-    let Ipos = 0.5;
+    let Ipos = 0.7;
     let Ipos_f64 = Ipos as f64;
-    let Ineg = -0.5;
+    let Ineg = 0.0;
     let Ipos_hex = utils::cur_coding(Ipos);
     let Ineg_hex = utils::cur_coding(Ineg);
 
@@ -244,14 +244,15 @@ async fn async_main(spawner: Spawner) {
     let mut I0 = 0.0;
 
     red.set_high();
+    green.set_high();
     loop {
         // hclk_request(clock::ClockFreqs::KernelFreq160Mhz, ||{
-        hclk_request(clock::ClockFreqs::KernelFreq16Mhz, || {
+        //hclk_request(clock::ClockFreqs::KernelFreq16Mhz, || {
             s1.set_high();
             delay_us(100);
             s1.set_low();
             delay_us(100);
-        });
+        //});
         // i = 0;
         // s2.set_high();
         // s1.set_high();
