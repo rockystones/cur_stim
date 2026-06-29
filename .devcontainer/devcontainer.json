@@ -3,12 +3,20 @@
   "build": {
     "dockerfile": "Dockerfile"
   },
+  "features": {
+    "ghcr.io/devcontainers/features/python:1": {
+      "installTools": true,
+      "version": "latest"
+    }
+  },
   "customizations": {
     "vscode": {
       "extensions": [
         "rust-lang.rust-analyzer",
         "marus25.cortex-debug",
-        "probe-rs.probe-rs-debugger"
+        "probe-rs.probe-rs-debugger",
+        "ms-python.python",
+        "ms-python.vscode-pylance"
       ]
     }
   },
