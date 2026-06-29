@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>cur_stim — Stimulator Parameter GUI</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: system-ui, sans-serif; font-size: 15px; background: #f5f5f3; color: #1a1a1a; line-height: 1.6; }
+
+header { background: #1a1a2e; color: #e8e8f0; padding: 1.1rem 2rem; display: flex; align-items: center; justify-content: space-between; }
+header h1 { font-size: 17px; font-weight: 500; }
+header .sub { font-size: 12px; color: #8080aa; margin-top: 2px; }
+.hbadge { font-size: 11px; background: #2a2a50; color: #9090cc; padding: 3px 10px; border-radius: 20px; white-space: nowrap; }
+
+.layout { display: grid; grid-template-columns: 300px 1fr; min-height: calc(100vh - 56px); }
+
+.panel { background: #fff; border-right: 1px solid #e8e8e4; padding: 1.25rem 1.25rem 2rem; overflow-y: auto; }
+.panel-section { margin-bottom: 1.25rem; }
+.panel-section h2 { font-size: 11px; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: #999; margin-bottom: 0.75rem; padding-bottom: 0.4rem; border-bottom: 1px solid #f0f0ec; }
+
+.right { padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem; overflow-y: auto; }
+
+.mode-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 7px; }
+.mode-btn { border: 1.5px solid #ddd; border-radius: 8px; padding: 9px 4px 8px; text-align: center; cursor: pointer; background: #fafafa; font-size: 11.5px; font-weight: 500; color: #666; transition: all 0.12s; user-select: none; }
+.mode-btn:hover { border-color: #534AB7; color: #534AB7; }
+.mode-btn.active { border-color: #534AB7; background: #EEEDFE; color: #3C3489; }
+.mode-icon { font-size: 18px; display: block; margin-bottom: 3px; }
+
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.form-group { margin-bottom: 0.7rem; }
+label { display: block; font-size: 12.5px; font-weight: 500; color: #555; margin-bottom: 3px; }
+label .unit { font-weight: 400; color: #aaa; font-size: 11px; }
+input[type=number], select {
+  width: 100%; padding: 6px 9px; border: 1px solid #ddd; border-radius: 6px;
+  font-size: 13.5px; background: #fafafa; color: #1a1a1a;
+  -moz-appearance: textfield;
+}
+input[type=number]::-webkit-inner-spin-button { opacity: 0.4; }
+input[type=number]:focus, select:focus { outline: 2px solid #534AB7; outline-offset: 1px; background: #fff; }
+.hint { font-size: 11px; color: #bbb; margin-top: 2px; }
+
+.info-note { background: #EEEDFE; border-left: 3px solid #534AB7; border-radius: 0 5px 5px 0; padding: 8px 12px; font-size: 12px; color: #3C3489; margin-bottom: 0.75rem; display: none; }
+.info-note.visible { display: block; }
+
+/* Waveform */
+.card { background: #fff; border: 1px solid #e8e8e4; border-radius: 10px; }
+.card-head { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1.1rem; border-bottom: 1px solid #f0f0ec; }
+.card-head h3 { font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #888; }
+.card-body { padding: 1rem 1.1rem; }
+canvas { display: block; width: 100%; }
+
+/* Workflow steps */
+.steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; border-radius: 10px; overflow: hidden; border: 1px solid #e8e8e4; }
+.step { background: #fff; padding: 1rem 0.9rem; border-right: 1px solid #f0f0ec; }
+.step:last-child { border-right: none; }
+.step-num { font-size: 11px; font-weight: 700; color: #aaa; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 4px; }
+.step-title { font-size: 13px; font-weight: 500; color: #333; margin-bottom: 4px; }
+.step-desc { font-size: 12px; color: #888; line-height: 1.5; }
+.step.active-step .step-num { color: #534AB7; }
+.step.active-step .step-title { color: #3C3489; }
+
+/* Download section */
+.dl-card { background: #fff; border: 1px solid #e8e8e4; border-radius: 10px; padding: 1.25rem; }
+.dl-card h3 { font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #888; margin-bottom: 1rem; }
+.dl-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.btn { padding: 8px 18px; border-radius: 7px; font-size: 13.5px; font-weight: 500; cursor: pointer; border: 1px solid #ddd; background: #fafafa; color: #333; transition: all 0.13s; white-space: nowrap; }
+.btn:hover { background: #f0f0ec; }
+.btn.primary { background: #534AB7; color: #fff; border-color: #534AB7; }
+.btn.primary:hover { background: #3C3489; }
+.btn.green { background: #1D9E75; color: #fff; border-color: #1D9E75; }
+.btn.green:hover { background: #0F6E56; }
+.params-summary { font-size: 12px; color: #888; margin-top: 0.75rem; font-family: 'SF Mono', monospace; background: #f8f8f6; border-radius: 6px; padding: 8px 12px; line-height: 1.8; }
+
+/* Command block */
+.cmd-block { background: #16161e; border-radius: 8px; padding: 0.85rem 1.1rem; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 13px; color: #c9d1d9; margin-top: 0.75rem; position: relative; }
+.cmd-block .prompt { color: #50fa7b; user-select: none; }
+.cmd-block .copy-cmd { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 11px; background: #2a2a3e; color: #9090cc; border: 1px solid #3a3a55; border-radius: 4px; padding: 3px 9px; cursor: pointer; font-family: system-ui; }
+.cmd-block .copy-cmd:hover { background: #3a3a55; }
+
+.toast { position: fixed; bottom: 1.5rem; right: 1.5rem; background: #1D9E75; color: #fff; padding: 9px 18px; border-radius: 7px; font-size: 13.5px; font-weight: 500; opacity: 0; transform: translateY(8px); transition: all 0.2s; pointer-events: none; z-index: 999; }
+.toast.show { opacity: 1; transform: translateY(0); }
+
+.warning-badge { display: inline-block; background: #FAEEDA; color: #633806; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="h1" style="font-size:17px;font-weight:500;color:#e8e8f0;">cur_stim — Stimulator Parameter GUI</div>
+    <div class="sub">Set parameters → download params.json → run apply_params.py in Codespaces → flash .bin</div>
+  </div>
+  <span class="hbadge">v2.0</span>
+</header>
+
+<div class="layout">
+
+  <!-- LEFT: controls -->
+  <div class="panel">
+    <div class="panel-section">
+      <h2>Stimulation Mode</h2>
+      <div class="mode-grid">
+        <div class="mode-btn active" data-mode="biphasic" onclick="setMode('biphasic')">
+          <span class="mode-icon">⟲</span>Biphasic
+        </div>
+        <div class="mode-btn" data-mode="capacitor" onclick="setMode('capacitor')">
+          <span class="mode-icon">⊣⊢</span>Cap-coupled
+        </div>
+        <div class="mode-btn" data-mode="monophasic" onclick="setMode('monophasic')">
+          <span class="mode-icon">→</span>Monophasic
+        </div>
+      </div>
+      <div id="note-biphasic" class="info-note visible">s0 set low, s3 high. Both Ipos and Ineg active. Standard charge-balanced delivery.</div>
+      <div id="note-capacitor" class="info-note">s0 toggled to connect capacitor. Charge-balanced through capacitive coupling.</div>
+      <div id="note-monophasic" class="info-note">s0 set low, s3 high. Ineg forced to 0. Single-phase only.</div>
+    </div>
+
+    <div class="panel-section">
+      <h2>Current Amplitude</h2>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Ipos <span class="unit">mA</span></label>
+          <input type="number" id="ipos" min="0.1" max="1.6" step="0.1" value="0.7" oninput="update()">
+          <div class="hint">0.1 – 1.6 mA</div>
+        </div>
+        <div class="form-group" id="ineg-group">
+          <label>Ineg <span class="unit">mA</span></label>
+          <input type="number" id="ineg" min="-1.6" max="0.0" step="0.1" value="-1.0" oninput="update()">
+          <div class="hint">0.0 to −1.6 mA</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <h2>Pulse Timing</h2>
+      <div class="form-row">
+        <div class="form-group">
+          <label>t1 — pos phase <span class="unit">µs</span></label>
+          <input type="number" id="t1" min="50" max="10000" step="50" value="1000" oninput="update()">
+          <div class="hint">50 – 10 000 µs</div>
+        </div>
+        <div class="form-group" id="t2-group">
+          <label>t2 — neg phase <span class="unit">µs</span></label>
+          <input type="number" id="t2" min="50" max="10000" step="50" value="1200" oninput="update()">
+          <div class="hint">50 – 10 000 µs</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Inter-phase gap <span class="unit">µs</span></label>
+        <input type="number" id="gap" min="0" max="2000" step="50" value="100" oninput="update()">
+        <div class="hint">delay_us between phases</div>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <h2>Hardware Settings</h2>
+      <div class="form-group">
+        <label>TIM1 prescaler</label>
+        <input type="number" id="prescaler" min="1" max="100" step="1" value="10" oninput="update()">
+        <div class="hint">Affects timer resolution. Default: 10</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: preview + workflow -->
+  <div class="right">
+
+    <!-- workflow steps -->
+    <div class="steps">
+      <div class="step active-step">
+        <div class="step-num">Step 1</div>
+        <div class="step-title">Set parameters</div>
+        <div class="step-desc">Configure mode, current, and timing in the panel on the left.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">Step 2</div>
+        <div class="step-title">Download params.json</div>
+        <div class="step-desc">Click "Download params.json" below and place it in the repo root.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">Step 3</div>
+        <div class="step-title">Run in Codespaces</div>
+        <div class="step-desc">Open Codespaces terminal and run <code style="background:#f0f0ec;padding:1px 4px;border-radius:3px;font-size:11px;">python3 apply_params.py</code></div>
+      </div>
+      <div class="step">
+        <div class="step-num">Step 4</div>
+        <div class="step-title">Download &amp; flash</div>
+        <div class="step-desc">Right-click <code style="background:#f0f0ec;padding:1px 4px;border-radius:3px;font-size:11px;">u5_example.bin</code> → Download → copy to Nucleo-144.</div>
+      </div>
+    </div>
+
+    <!-- waveform -->
+    <div class="card">
+      <div class="card-head">
+        <h3>Waveform preview</h3>
+        <span id="period-label" style="font-size:12px;color:#aaa;"></span>
+      </div>
+      <div class="card-body">
+        <canvas id="waveform" height="160"></canvas>
+      </div>
+    </div>
+
+    <!-- download -->
+    <div class="dl-card">
+      <h3>Export &amp; run</h3>
+      <div class="dl-actions">
+        <button class="btn primary" onclick="downloadParams()">⬇ Download params.json</button>
+        <button class="btn" onclick="copyCommand()">Copy terminal command</button>
+      </div>
+      <div class="params-summary" id="params-summary"></div>
+      <div class="cmd-block">
+        <span class="prompt">$&nbsp;</span><span id="cmd-text">python3 apply_params.py params.json</span>
+        <button class="copy-cmd" onclick="copyCommand()">copy</button>
+      </div>
+      <div style="margin-top:0.75rem;font-size:12px;color:#aaa;">
+        Make sure <code style="background:#f0f0ec;padding:1px 5px;border-radius:3px;">apply_params.py</code> is in the repo root alongside <code style="background:#f0f0ec;padding:1px 5px;border-radius:3px;">Cargo.toml</code>. The script will patch <code style="background:#f0f0ec;padding:1px 5px;border-radius:3px;">src/main.rs</code>, run <code style="background:#f0f0ec;padding:1px 5px;border-radius:3px;">cargo bin</code>, and tell you where the .bin file is.
+        A backup <code style="background:#f0f0ec;padding:1px 5px;border-radius:3px;">src/main.rs.bak</code> is saved automatically before any changes.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let currentMode = 'biphasic';
+
+function setMode(m) {
+  currentMode = m;
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`[data-mode="${m}"]`).classList.add('active');
+  ['biphasic','capacitor','monophasic'].forEach(k => {
+    document.getElementById('note-' + k).classList.toggle('visible', k === m);
+  });
+  const inegGroup = document.getElementById('ineg-group');
+  const t2Group   = document.getElementById('t2-group');
+  if (m === 'monophasic') {
+    document.getElementById('ineg').value = '0.0';
+    inegGroup.style.opacity = '0.35';
+    inegGroup.style.pointerEvents = 'none';
+    t2Group.style.opacity = '0.35';
+    t2Group.style.pointerEvents = 'none';
+  } else {
+    inegGroup.style.opacity = '1';
+    inegGroup.style.pointerEvents = '';
+    t2Group.style.opacity = '1';
+    t2Group.style.pointerEvents = '';
+    if (parseFloat(document.getElementById('ineg').value) === 0) {
+      document.getElementById('ineg').value = '-1.0';
+    }
+  }
+  update();
+}
+
+function getParams() {
+  const ipos = Math.max(0.1, Math.min(1.6, parseFloat(document.getElementById('ipos').value) || 0.7));
+  let ineg    = Math.max(-1.6, Math.min(0, parseFloat(document.getElementById('ineg').value) || -1.0));
+  if (currentMode === 'monophasic') ineg = 0.0;
+  const t1         = Math.max(50,   Math.min(10000, parseInt(document.getElementById('t1').value)         || 1000));
+  const t2         = Math.max(50,   Math.min(10000, parseInt(document.getElementById('t2').value)         || 1200));
+  const gap        = Math.max(0,    Math.min(2000,  parseInt(document.getElementById('gap').value)        || 100));
+  const prescaler  = Math.max(1,    Math.min(100,   parseInt(document.getElementById('prescaler').value)  || 10));
+  return { mode: currentMode, ipos, ineg, t1, t2, gap, prescaler };
+}
+
+function update() {
+  const p = getParams();
+  drawWaveform(p);
+  updateSummary(p);
+}
+
+function drawWaveform(p) {
+  const canvas = document.getElementById('waveform');
+  const W = canvas.offsetWidth || 640;
+  const H = 160;
+  canvas.width  = W * (window.devicePixelRatio || 1);
+  canvas.height = H * (window.devicePixelRatio || 1);
+  const ctx = canvas.getContext('2d');
+  ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
+  ctx.clearRect(0, 0, W, H);
+
+  const midY     = H * 0.5;
+  const ampScale = (H * 0.33) / 1.6;
+  const mX       = 38;
+  const drawW    = W - mX * 2;
+
+  // baseline
+  ctx.strokeStyle = '#e0e0da';
+  ctx.lineWidth = 0.5;
+  ctx.setLineDash([3, 4]);
+  ctx.beginPath(); ctx.moveTo(mX, midY); ctx.lineTo(W - mX, midY); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // axis labels
+  ctx.fillStyle = '#bbb';
+  ctx.font = '11px system-ui';
+  ctx.textAlign = 'right';
+  ctx.fillText(`+${p.ipos.toFixed(1)}`, mX - 5, midY - p.ipos * ampScale + 4);
+  if (p.mode !== 'monophasic') {
+    ctx.fillText(`${p.ineg.toFixed(1)}`, mX - 5, midY - p.ineg * ampScale + 4);
+  }
+  ctx.fillText('0', mX - 5, midY + 4);
+
+  const phases = p.mode === 'monophasic'
+    ? [p.t1, p.gap]
+    : [p.t1, p.gap, p.t2, p.gap];
+  const totalT = phases.reduce((a, b) => a + b, 0) + p.gap;
+  const px = t => mX + (t / totalT) * drawW;
+
+  ctx.strokeStyle = '#534AB7';
+  ctx.lineWidth = 2.5;
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+
+  const yPos = midY - p.ipos * ampScale;
+  const yNeg = p.mode === 'capacitor'
+    ? midY + Math.abs(p.ineg) * ampScale * 0.75
+    : midY - p.ineg * ampScale;
+
+  let cur = 0;
+  ctx.moveTo(px(cur), midY);
+  ctx.lineTo(px(cur), yPos);
+  ctx.lineTo(px(cur + p.t1), yPos);
+  ctx.lineTo(px(cur + p.t1), midY);
+  cur += p.t1 + p.gap;
+
+  if (p.mode !== 'monophasic') {
+    ctx.lineTo(px(cur), yNeg);
+    ctx.lineTo(px(cur + p.t2), yNeg);
+    ctx.lineTo(px(cur + p.t2), midY);
+    cur += p.t2 + p.gap;
+  }
+  ctx.lineTo(px(totalT), midY);
+  ctx.stroke();
+
+  // time labels
+  ctx.fillStyle = '#999';
+  ctx.font = '10.5px system-ui';
+  ctx.textAlign = 'center';
+  ctx.fillText(`t1 = ${p.t1} µs`, px(p.t1 / 2), H - 6);
+  if (p.mode !== 'monophasic') {
+    ctx.fillText(`t2 = ${p.t2} µs`, px(p.t1 + p.gap + p.t2 / 2), H - 6);
+  }
+
+  // period annotation
+  const totalMs = (totalT / 1000).toFixed(1);
+  document.getElementById('period-label').textContent = `total period ≈ ${totalMs} ms`;
+}
+
+function updateSummary(p) {
+  document.getElementById('params-summary').textContent =
+    `mode=${p.mode}  Ipos=${p.ipos.toFixed(1)}mA  Ineg=${p.ineg.toFixed(1)}mA  ` +
+    `t1=${p.t1}µs  t2=${p.t2}µs  gap=${p.gap}µs  prescaler=${p.prescaler}`;
+}
+
+function downloadParams() {
+  const p = getParams();
+  p.generated = new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC';
+  p.note = 'Generated by stimulator_gui.html. Run: python3 apply_params.py params.json';
+  const blob = new Blob([JSON.stringify(p, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'params.json';
+  a.click();
+  showToast('params.json downloaded!');
+}
+
+function copyCommand() {
+  navigator.clipboard.writeText('python3 apply_params.py params.json')
+    .then(() => showToast('Command copied!'));
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+window.addEventListener('resize', () => update());
+update();
+</script>
+</body>
+</html>
